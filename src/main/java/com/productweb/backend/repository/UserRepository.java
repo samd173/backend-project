@@ -8,11 +8,12 @@ import com.productweb.backend.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    User findByEmailAndPassword(String email, String password);
+    // 🔥 LOGIN (SAFE WAY)
+    Optional<User> findByEmail(String email);
 
-    Optional<User> findByEmail(String email); // 🔥 FIXED
-
+    // 🔥 CHECK EMAIL EXIST
     boolean existsByEmail(String email);
 
+    // 🔥 FILTER USERS BY ROLE
     List<User> findByRole(String role);
 }

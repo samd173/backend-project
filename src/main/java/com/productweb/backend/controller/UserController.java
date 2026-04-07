@@ -10,9 +10,7 @@ import com.productweb.backend.repository.UserRepository;
 import com.productweb.backend.config.JwtUtil;
 
 @RestController
-
 @CrossOrigin(origins = "*")
-
 @RequestMapping("/user")
 public class UserController {
 
@@ -22,41 +20,41 @@ public class UserController {
         this.repo = repo;
     }
 
-    // 🔐 COMMON TOKEN VALIDATION
+    // 🔐 TOKEN EXTRACT
     private String getToken(String authHeader) {
         return authHeader.replace("Bearer ", "");
     }
 
+    // =========================
     // 🔥 GET USER BY ID
-
+    // =========================
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(
-
             @PathVariable Long id,
-
             @RequestHeader("Authorization") String auth) {
 
         try {
-            JwtUtil.validateToken(getToken(auth)); // 🔐 validate
+            JwtUtil.validateToken(getToken(auth));
 
             Optional<User> user = repo.findById(id);
 
-            return user.isPresent()
-                    ? ResponseEntity.ok(user.get())
-                    : ResponseEntity.status(404).body("User not found ❌");
+            if (user.isPresent()) {
+                return ResponseEntity.ok(user.get());
+            } else {
+                return ResponseEntity.status(404).body("User not found ❌");
+            }
 
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Unauthorized ❌");
         }
     }
 
+    // =========================
     // 🔥 GET USER BY EMAIL
-
+    // =========================
     @GetMapping("/email/{email}")
     public ResponseEntity<?> getUserByEmail(
-
             @PathVariable String email,
-
             @RequestHeader("Authorization") String auth) {
 
         try {
@@ -64,24 +62,24 @@ public class UserController {
 
             Optional<User> user = repo.findByEmail(email);
 
-            return user.isPresent()
-                    ? ResponseEntity.ok(user.get())
-                    : ResponseEntity.status(404).body("User not found ❌");
+            if (user.isPresent()) {
+                return ResponseEntity.ok(user.get());
+            } else {
+                return ResponseEntity.status(404).body("User not found ❌");
+            }
 
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Unauthorized ❌");
         }
     }
 
+    // =========================
     // 🔥 UPDATE USER
-
+    // =========================
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(
-
             @PathVariable Long id,
-
             @RequestBody User updated,
-
             @RequestHeader("Authorization") String auth) {
 
         try {
@@ -107,38 +105,11 @@ public class UserController {
         }
     }
 
-    // 🔥 ADMIN ONLY: GET ALL USERS
-
+    // =========================
+    // 🔥 ADMIN: GET ALL USERS
+    // =========================
     @GetMapping("/all")
     public ResponseEntity<?> getAllUsers(
-
-            @RequestHeader("Authorization") String auth) {
-
-        try {
-            String token = getToken(auth);
-
-            JwtUtil.validateToken(token); // 🔐 validate
-            String role = JwtUtil.getRole(token); // 🔥 get role
-
-            // 🔐 ADMIN CHECK
-            if (!"ADMIN".equals(role)) {
-                return ResponseEntity.status(403).body("Access denied ❌ (Admin only)");
-            }
-
-            return ResponseEntity.ok(repo.findAll());
-
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body("Unauthorized ❌");
-        }
-    }
-
-    // 🔥 DELETE USER (ADMIN ONLY)
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(
-
-            @PathVariable Long id,
-
             @RequestHeader("Authorization") String auth) {
 
         try {
@@ -148,10 +119,42 @@ public class UserController {
             String role = JwtUtil.getRole(token);
 
             if (!"ADMIN".equals(role)) {
-                return ResponseEntity.status(403).body("Access denied ❌ (Admin only)");
+                return ResponseEntity.status(403)
+                        .body("Access denied ❌ (Admin only)");
+            }
+
+            return ResponseEntity.ok(repo.findAll());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Unauthorized ❌");
+        }
+    }
+
+    // =========================
+    // 🔥 ADMIN: DELETE USER
+    // =========================
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String auth) {
+
+        try {
+            String token = getToken(auth);
+
+            JwtUtil.validateToken(token);
+            String role = JwtUtil.getRole(token);
+
+            if (!"ADMIN".equals(role)) {
+                return ResponseEntity.status(403)
+                        .body("Access denied ❌ (Admin only)");
+            }
+
+            if (!repo.existsById(id)) {
+                return ResponseEntity.status(404).body("User not found ❌");
             }
 
             repo.deleteById(id);
+
             return ResponseEntity.ok("User deleted successfully ✅");
 
         } catch (Exception e) {

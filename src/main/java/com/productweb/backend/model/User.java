@@ -3,7 +3,7 @@ package com.productweb.backend.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users") // 🔥 FIX: user → users (PostgreSQL issue solve)
+@Table(name = "users") // ✅ PostgreSQL safe (no "user" conflict)
 public class User {
 
     @Id
@@ -19,13 +19,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role;
+    @Column(nullable = false)
+    private String role = "USER"; // 🔥 default role
 
     private String phone;
+
     private String address;
 
-    // 🔥 IMAGE FIELD (large text support)
-    @Column(length = 100000)
+    // 🔥 IMAGE (TEXT for PostgreSQL)
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     // =========================
@@ -49,7 +51,7 @@ public class User {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = email.toLowerCase(); // 🔥 best practice
     }
 
     public String getPassword() {

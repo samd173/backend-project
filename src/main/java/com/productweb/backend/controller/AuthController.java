@@ -21,17 +21,24 @@ public class AuthController {
     }
 
     // =========================
-    // 🔐 LOGIN
+    // 🔐 LOGIN (FIXED)
     // =========================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
 
-        User dbUser = userRepo.findByEmailAndPassword(
-                user.getEmail(),
-                user.getPassword());
+        Optional<User> optionalUser = userRepo.findByEmail(user.getEmail());
 
-        if (dbUser != null) {
+        if (optionalUser.isPresent()) {
 
+            User dbUser = optionalUser.get();
+
+            // 🔥 PASSWORD CHECK
+            if (!dbUser.getPassword().equals(user.getPassword())) {
+                return ResponseEntity.status(401).body(
+                        Map.of("error", "Invalid password ❌"));
+            }
+
+            // 🔥 JWT TOKEN
             String token = JwtUtil.generateToken(
                     dbUser.getEmail(),
                     dbUser.getRole());
@@ -46,36 +53,28 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } else {
-
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Invalid email or password ❌");
-
-            return ResponseEntity.status(401).body(error);
+            return ResponseEntity.status(401).body(
+                    Map.of("error", "User not found ❌"));
         }
     }
 
     // =========================
-    // 🆕 REGISTER
+    // 🆕 REGISTER (SAFE)
     // =========================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
 
         if (userRepo.existsByEmail(user.getEmail())) {
-
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Email already exists ❌");
-
-            return ResponseEntity.status(400).body(error);
+            return ResponseEntity.status(400).body(
+                    Map.of("error", "Email already exists ❌"));
         }
 
-        // 🔥 ROLE SET (CHANGE TO ADMIN IF NEEDED)
-        user.setRole("USER"); // 👉 ADMIN भी कर सकते हो
+        // 🔥 DEFAULT ROLE
+        user.setRole("USER");
 
         userRepo.save(user);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "User registered successfully ✅");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                Map.of("message", "User registered successfully ✅"));
     }
 }
