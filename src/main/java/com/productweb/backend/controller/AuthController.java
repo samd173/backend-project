@@ -10,9 +10,7 @@ import com.productweb.backend.repository.UserRepository;
 import com.productweb.backend.config.JwtUtil;
 
 @RestController
-
 @CrossOrigin(origins = "*")
-
 @RequestMapping("/auth")
 public class AuthController {
 
@@ -22,8 +20,9 @@ public class AuthController {
         this.userRepo = userRepo;
     }
 
-    // 🔐 LOGIN (WITH ROLE + JWT)
-
+    // =========================
+    // 🔐 LOGIN
+    // =========================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
 
@@ -33,7 +32,6 @@ public class AuthController {
 
         if (dbUser != null) {
 
-            // 🔥 TOKEN WITH ROLE
             String token = JwtUtil.generateToken(
                     dbUser.getEmail(),
                     dbUser.getRole());
@@ -50,14 +48,15 @@ public class AuthController {
         } else {
 
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Invalid credentials ❌");
+            error.put("error", "Invalid email or password ❌");
 
             return ResponseEntity.status(401).body(error);
         }
     }
 
+    // =========================
     // 🆕 REGISTER
-
+    // =========================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
 
@@ -69,41 +68,14 @@ public class AuthController {
             return ResponseEntity.status(400).body(error);
         }
 
-        user.setRole("USER");
+        // 🔥 ROLE SET (CHANGE TO ADMIN IF NEEDED)
+        user.setRole("USER"); // 👉 ADMIN भी कर सकते हो
+
         userRepo.save(user);
 
-        Map<String, String> res = new HashMap<>();
-        res.put("message", "User registered successfully ✅");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User registered successfully ✅");
 
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(response);
     }
 }
-
-/*
- * package com.productweb.backend.controller;
- * 
- * import org.springframework.web.bind.annotation.*;
- * 
- * import java.util.*;
- * 
- * @RestController
- * 
- * @RequestMapping("/auth")
- * 
- * @CrossOrigin("*")
- * public class AuthController {
- * 
- * // 🔥 LOGIN (FAKE)
- * 
- * @PostMapping("/login")
- * public Map<String, Object> login(@RequestBody Map<String, String> req) {
- * 
- * Map<String, Object> res = new HashMap<>();
- * 
- * res.put("message", "Login success (dummy)");
- * res.put("token", "fake-jwt-token");
- * 
- * return res;
- * }
- * }
- */
