@@ -3,25 +3,34 @@ package com.productweb.backend.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "users") // 🔥 FIX: user → users (PostgreSQL issue solve)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
     private String password;
+
     private String role;
 
     private String phone;
     private String address;
 
-    // 🔥 OPTIONAL (image issue avoid करने के लिए)
+    // 🔥 IMAGE FIELD (large text support)
     @Column(length = 100000)
     private String image;
 
+    // =========================
     // GETTERS & SETTERS
+    // =========================
 
     public Long getId() {
         return id;
