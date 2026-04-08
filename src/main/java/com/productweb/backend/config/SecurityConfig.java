@@ -16,8 +16,11 @@ public class SecurityConfig {
                 .cors(cors -> {
                 })
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/products/*", "/auth/*").permitAll() // 🔥 FIX
-                        .anyRequest().authenticated());
+                        .requestMatchers("/products/**").permitAll() // ✅ allow products
+                        .requestMatchers("/auth/**").permitAll() // ✅ allow login
+                        .requestMatchers("/").permitAll() // ✅ root allow
+                        .anyRequest().permitAll() // 🔥 TEMP FIX (important)
+                );
 
         return http.build();
     }
