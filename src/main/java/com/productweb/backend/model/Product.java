@@ -3,7 +3,7 @@ package com.productweb.backend.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "products") // 🔥 Important (table name fix)
+@Table(name = "products")
 public class Product {
 
     @Id
@@ -21,13 +21,11 @@ public class Product {
 
     private String category;
 
-    // 🔥 PostgreSQL compatible image field
-    @Column(length = 100000)
+    // 🔥 IMPORTANT FIX (500 error fix)
+    @Column(columnDefinition = "TEXT")
     private String image;
 
-    // =========================
     // GETTERS & SETTERS
-    // =========================
 
     public Long getId() {
         return id;
