@@ -11,25 +11,35 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // =========================
     // 🔥 USER RELATION
+    // =========================
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private User user;
 
-    // 🔥 NEW: CUSTOMER NAME (FIX)
+    // =========================
+    // 🔥 CUSTOMER NAME
+    // =========================
     private String customer;
 
+    // =========================
+    // 🔥 ORDER DETAILS
+    // =========================
     private double total;
     private String status;
     private String eta;
 
-    // 🔥 ITEMS
-    @Lob
-    @Column(length = 100000)
+    // =========================
+    // 🔥 ITEMS (JSON / TEXT)
+    // =========================
+    @Column(columnDefinition = "TEXT")
     private String items;
 
+    // =========================
     // 🔥 PAYMENT METHOD
+    // =========================
     @Column(name = "payment_method")
     private String paymentMethod;
 
@@ -49,7 +59,6 @@ public class Order {
         this.user = user;
     }
 
-    // ✅ CUSTOMER FIX
     public String getCustomer() {
         return customer;
     }

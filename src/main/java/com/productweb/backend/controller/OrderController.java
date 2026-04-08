@@ -1,7 +1,10 @@
 package com.productweb.backend.controller;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+
 import java.util.List;
+import java.util.Optional;
 
 import com.productweb.backend.model.Order;
 import com.productweb.backend.model.User;
@@ -9,9 +12,7 @@ import com.productweb.backend.repository.OrderRepository;
 import com.productweb.backend.repository.UserRepository;
 
 @RestController
-
 @CrossOrigin(origins = "*")
-
 @RequestMapping("/orders")
 public class OrderController {
 
@@ -23,84 +24,127 @@ public class OrderController {
         this.userRepo = userRepo;
     }
 
+    // =========================
     // 🔥 1. SAVE ORDER
-
+    // =========================
     @PostMapping
-    public Order saveOrder(@RequestBody Order order) {
-
-        System.out.println("📦 Incoming Order: " + order);
-
-        // ✅ FIX: Status overwrite nahi karega
-        if (order.getStatus() == null) {
-            order.setStatus("Pending");
-        }
-
-        // ETA always set
-        order.setEta("30 mins");
+    public ResponseEntity<?> saveOrder(@RequestBody Order order) {
 
         try {
-            // 🔥 USER ATTACH + CUSTOMER NAME
+            // ✅ Default status
+            if (order.getStatus() == null) {
+                order.setStatus("Pending");
+            }
+
+            // ✅ ETA
+            order.setEta("30 mins");
+
+            // 🔥 USER ATTACH
             if (order.getUser() != null && order.getUser().getId() != null) {
 
-                User user = userRepo.findById(order.getUser().getId()).orElse(null);
+                Optional<User> optionalUser = userRepo.findById(order.getUser().getId());
 
-                if (user != null) {
+                if (optionalUser.isPresent()) {
+                    User user = optionalUser.get();
+
                     order.setUser(user);
-
-                    // ✅ Customer name set
                     order.setCustomer(user.getName());
 
                 } else {
-                    System.out.println("❌ User not found in DB");
+                    return ResponseEntity.status(404).body("User not found ❌");
                 }
 
             } else {
-                System.out.println("❌ User data missing from request");
+                return ResponseEntity.badRequest().body("User data missing ❌");
             }
 
-            // 🔥 PAYMENT METHOD SAFETY
+            // 🔥 PAYMENT DEFAULT
             if (order.getPaymentMethod() == null) {
                 order.setPaymentMethod("COD");
             }
 
-            // 💾 SAVE ORDER
             Order savedOrder = repo.save(order);
 
-            System.out.println("✅ Order Saved: " + savedOrder.getId());
-
-            return savedOrder;
+            return ResponseEntity.ok(savedOrder);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return ResponseEntity.status(500).body("Error saving order ❌");
         }
     }
 
-    // 🔥 2. GET ALL ORDERS (ADMIN)
-
+    // =========================
+    // 🔥 2. GET ALL ORDERS
+    // =========================
     @GetMapping
-    public List<Order> getAllOrders() {
-        return repo.findAll();
+    public ResponseEntity<?> getAllOrders() {
+        try {
+            List<Order> orders = repo.findAll();
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching orders ❌");
+        }
     }
 
+    // =========================
     // 🔥 3. GET USER ORDERS
-
+    // =========================
     @GetMapping("/user/{id}")
-    public List<Order> getUserOrders(@PathVariable Long id) {
-        return repo.findByUserId(id);
+    public ResponseEntity<?> getUserOrders(@PathVariable Long id) {
+        try {
+            List<Order> orders = repo.findByUserId(id);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching user orders ❌");
+        }
     }
 
+    // =========================
     // 🔥 4. UPDATE STATUS
-
+    // =========================
     @PutMapping("/{id}")
-    public Order updateStatus(@PathVariable Long id, @RequestBody Order updated) {
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestBody Order updated) {
 
-        Order order = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found ❌"));
+        try {
+            Optional<Order> optionalOrder = repo.findById(id);
 
-        order.setStatus(updated.getStatus());
-        order.setEta(updated.getEta());
+            if (optionalOrder.isPresent()) {
 
-        return repo.save(order);
+                Order order = optionalOrder.get();
+
+                order.setStatus(updated.getStatus());
+                order.setEta(updated.getEta());
+
+                Order saved = repo.save(order);
+
+                return ResponseEntity.ok(saved);
+
+            } else {
+                return ResponseEntity.status(404).body("Order not found ❌");
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error updating order ❌");
+        }
+    }
+
+    // =========================
+    // 🔥 5. DELETE ORDER (OPTIONAL)
+    // =========================
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteOrder(@PathVariable Long id) {
+        try {
+            if (!repo.existsById(id)) {
+                return ResponseEntity.status(404).body("Order not found ❌");
+            }
+
+            repo.deleteById(id);
+            return ResponseEntity.ok("Order deleted successfully ✅");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error deleting order ❌");
+        }
     }
 }
