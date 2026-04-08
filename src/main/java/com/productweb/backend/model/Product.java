@@ -3,32 +3,31 @@ package com.productweb.backend.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "products")
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String name;
-
     private double price;
-
     private String unit;
-
     private int quantity;
-
     private String category;
 
-    // 🔥 IMPORTANT FIX (500 error fix)
-    @Column(columnDefinition = "TEXT")
+    // 🔥 IMAGE (Base64 store)
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String image;
 
-    // GETTERS & SETTERS
+    // ✅ GETTERS & SETTERS
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
