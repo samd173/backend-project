@@ -17,7 +17,7 @@ public class Product {
 
     // 🔥 IMAGE (Base64 store)
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     // ✅ GETTERS & SETTERS
