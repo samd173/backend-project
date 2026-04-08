@@ -4,8 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 @Configuration
+@EnableWebSecurity // 🔥 VERY IMPORTANT
 public class SecurityConfig {
 
     @Bean
@@ -16,10 +18,10 @@ public class SecurityConfig {
                 .cors(cors -> {
                 })
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/products/**").permitAll() // ✅ allow products
-                        .requestMatchers("/auth/**").permitAll() // ✅ allow login
-                        .requestMatchers("/").permitAll() // ✅ root allow
-                        .anyRequest().permitAll() // 🔥 TEMP FIX (important)
+                        .requestMatchers("/products/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .anyRequest().permitAll() // 🔥 TEMP (allow all)
                 );
 
         return http.build();
